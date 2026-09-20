@@ -1,0 +1,37 @@
+{
+  "pattern_name": "720_marks_2026_format",
+  "max_marks": 720,
+  "total_candidates": 230114,
+  "qualifying_percentiles": {
+    "UR": 50.0,
+    "EWS": 50.0,
+    "OBC": 40.0,
+    "SC": 40.0,
+    "ST": 40.0,
+    "PH": 45.0
+  },
+  "benchmarks": [
+    {"marks": 720, "rank": 1, "percentile": 99.999},
+    {"marks": 680, "rank": 7, "percentile": 99.997},
+    {"marks": 650, "rank": 25, "percentile": 99.990},
+    {"marks": 630, "rank": 85, "percentile": 99.960},
+    {"marks": 600, "rank": 350, "percentile": 99.850},
+    {"marks": 575, "rank": 1000, "percentile": 99.560},
+    {"marks": 550, "rank": 2500, "percentile": 98.900},
+    {"marks": 520, "rank": 5200, "percentile": 97.700},
+    {"marks": 490, "rank": 9500, "percentile": 95.800},
+    {"marks": 460, "rank": 15500, "percentile": 93.200},
+    {"marks": 430, "rank": 23500, "percentile": 89.700},
+    {"marks": 400, "rank": 34000, "percentile": 85.200},
+    {"marks": 370, "rank": 47000, "percentile": 79.500},
+    {"marks": 340, "rank": 62000, "percentile": 73.000},
+    {"marks": 310, "rank": 79000, "percentile": 65.600},
+    {"marks": 280, "rank": 97000, "percentile": 57.800},
+    {"marks": 248, "rank": 115057, "percentile": 50.000},
+    {"marks": 220, "rank": 138068, "percentile": 40.000},
+    {"marks": 180, "rank": 172000, "percentile": 25.200},
+    {"marks": 130, "rank": 205000, "percentile": 10.900},
+    {"marks": 90, "rank": 222000, "percentile": 3.500},
+    {"marks": 0, "rank": 230114, "percentile": 0.010}
+  ]
+}

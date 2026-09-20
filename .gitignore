@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Pytest & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local databases & feedback logs
+data/users.db
+data/feedback_records.jsonl
+
+# System & IDE
+.DS_Store
+.vscode/
+.idea/
+.vercel/

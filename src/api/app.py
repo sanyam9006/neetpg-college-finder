@@ -3,6 +3,7 @@ import os
 from contextlib import asynccontextmanager
 from typing import Dict, Any
 from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 
@@ -80,6 +81,16 @@ async def monitor_requests(request: Request, call_next):
     REQUESTS_TOTAL.labels(method=method, endpoint=endpoint, status=status).inc()
     REQUEST_DURATION_SECONDS.labels(endpoint=endpoint).observe(duration)
     return response
+
+
+@app.get("/")
+def serve_index():
+    index_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    if os.path.exists("index.html"):
+        return FileResponse("index.html")
+    return {"message": "NEET PG College Finder API is running"}
 
 
 @app.get("/api/v1/health")

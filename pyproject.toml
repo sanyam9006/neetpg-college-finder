@@ -1,0 +1,18 @@
+[project]
+name = "neetpg-college-finder"
+version = "1.0.0"
+description = "NEET PG 2025-26 Marks-to-Rank Predictor, College Finder & MLOps API"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.0",
+    "pydantic>=2.8.0",
+    "numpy>=1.26.0",
+    "scipy>=1.13.0",
+    "scikit-learn>=1.5.0",
+    "joblib>=1.4.0",
+    "prometheus-client>=0.21.0"
+]
+
+[tool.vercel]
+entrypoint = "src.api.app:app"

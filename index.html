@@ -740,6 +740,7 @@
 </footer>
 
 <script>
+const API_BASE = (window.location.protocol === "file:") ? "http://localhost:8000" : "";
 /*
  ═══════════════════════════════════════════════════════════════
   NEET PG 2025–26 COLLEGE DATABASE
@@ -857,7 +858,7 @@ async function handleRegister(e) {
   btn.innerHTML = '⏳ Creating Account...';
 
   try {
-    const res = await fetch('http://localhost:8000/api/v1/auth/register', {
+    const res = await fetch(`${API_BASE}/api/v1/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, phone, batch_year, password })
@@ -925,7 +926,7 @@ async function handleLogin(e) {
   btn.innerHTML = '⏳ Signing In...';
 
   try {
-    const res = await fetch('http://localhost:8000/api/v1/auth/login', {
+    const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email_or_phone, password })
@@ -1575,7 +1576,7 @@ async function submitUserFeedback() {
   };
 
   try {
-    const res = await fetch("http://localhost:8000/api/v1/feedback", {
+    const res = await fetch(`${API_BASE}/api/v1/feedback`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -1635,7 +1636,7 @@ async function checkApiHealth() {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 2000);
-    const res = await fetch("http://localhost:8000/api/v1/health", { signal: controller.signal });
+    const res = await fetch(`${API_BASE}/api/v1/health`, { signal: controller.signal });
     clearTimeout(timeoutId);
 
     if (res.ok) {

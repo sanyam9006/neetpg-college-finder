@@ -83,9 +83,9 @@ class FeedbackRequest(BaseModel):
     score: float = Field(..., ge=0, le=800)
     pattern: int = Field(default=800)
     category: str = Field(default="UR")
-    predicted_rank: int = Field(..., ge=1)
-    actual_rank: int = Field(..., ge=1)
-    notes: Optional[str] = None
+    predicted_rank: int = Field(..., ge=1, le=250000)
+    actual_rank: int = Field(..., ge=1, le=250000)
+    notes: Optional[str] = Field(default=None, max_length=500)
 
 
 class FeedbackResponse(BaseModel):

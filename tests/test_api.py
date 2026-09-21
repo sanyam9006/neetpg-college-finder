@@ -76,3 +76,17 @@ def test_metrics_endpoint(client):
     res = client.get("/metrics")
     assert res.status_code == 200
     assert "neetpg_api_requests_total" in res.text
+
+
+def test_feedback_input_validation(client):
+    # Invalid rank exceeding bounds
+    bad_payload = {
+        "score": 500,
+        "pattern": 800,
+        "category": "UR",
+        "predicted_rank": 10000,
+        "actual_rank": 999999,  # exceeds 250000
+        "notes": "Test invalid bounds"
+    }
+    res = client.post("/api/v1/feedback", json=bad_payload)
+    assert res.status_code == 422  # Unprocessable Entity validation error

@@ -93,12 +93,30 @@ def serve_index():
     return {"message": "NEET PG College Finder API is running"}
 
 
+# In-memory IP rate limiter for feedback submissions to prevent spam/poisoning
+feedback_rate_limits = {}
+
+def check_feedback_rate_limit(client_ip: str, limit: int = 10, window_seconds: int = 60) -> bool:
+    now = time.time()
+    timestamps = feedback_rate_limits.get(client_ip, [])
+    timestamps = [t for t in timestamps if now - t < window_seconds]
+    if len(timestamps) >= limit:
+        return False
+    timestamps.append(now)
+    feedback_rate_limits[client_ip] = timestamps
+    return True
+
+
 @app.get("/api/v1/health")
 def health_check():
+    loaded_patterns = [p for p, m in models.items() if m is not None]
+    colleges_count = len(recommender.colleges) if recommender else 0
+    is_healthy = (800 in loaded_patterns or 720 in loaded_patterns) and colleges_count > 0
+
     return {
-        "status": "healthy",
-        "models_loaded": list(models.keys()),
-        "colleges_loaded": len(recommender.colleges) if recommender else 0,
+        "status": "healthy" if is_healthy else "degraded",
+        "models_loaded": loaded_patterns,
+        "colleges_loaded": colleges_count,
         "environment": "production"
     }
 
@@ -263,7 +281,14 @@ def unified_predict_and_recommend(req: UnifiedPredictAndRecommendRequest):
 
 
 @app.post("/api/v1/feedback", response_model=FeedbackResponse)
-def submit_feedback(req: FeedbackRequest):
+def submit_feedback(req: FeedbackRequest, request: Request):
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    if not check_feedback_rate_limit(client_ip, limit=10, window_seconds=60):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many feedback submissions from this IP. Please wait 60 seconds before submitting again."
+        )
+
     err = abs(req.actual_rank - req.predicted_rank)
     err_pct = round((err / req.actual_rank) * 100, 2)
 

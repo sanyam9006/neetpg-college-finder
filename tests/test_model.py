@@ -51,3 +51,10 @@ def test_720_pattern_model(model_720):
     assert pred.max_marks == 720
     assert pred.predicted_rank < 5000
     assert pred.percentile > 98.0
+
+
+def test_empirical_accuracy_loocv():
+    from src.models.evaluate import evaluate_model_quality_gates, backtest_recommender
+    assert evaluate_model_quality_gates(800) is True
+    assert evaluate_model_quality_gates(720) is True
+    assert backtest_recommender() is True

@@ -1,7 +1,9 @@
 import os
+import sys
 import json
 import datetime
 import joblib
+import sklearn
 from typing import Dict, Any, Optional
 from src.models.monotonic_model import MonotonicQuantileRegressor
 
@@ -34,7 +36,9 @@ class ModelRegistry:
             "version": version,
             "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "benchmarks_count": len(model.benchmarks),
-            "metrics": metrics
+            "metrics": metrics,
+            "sklearn_version": sklearn.__version__,
+            "python_version": sys.version
         }
 
         with open(metadata_path, "w", encoding="utf-8") as f:
@@ -43,9 +47,27 @@ class ModelRegistry:
         return version_dir
 
     def load_model(self, pattern: int = 800, version: str = "latest") -> MonotonicQuantileRegressor:
-        model_path = os.path.join(self.registry_dir, f"pattern_{pattern}", version, "model.joblib")
+        version_dir = os.path.join(self.registry_dir, f"pattern_{pattern}", version)
+        model_path = os.path.join(version_dir, "model.joblib")
+        metadata_path = os.path.join(version_dir, "metadata.json")
+
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model artifact not found at {model_path}. Please train the model first.")
+
+        # Check metadata for version compatibility
+        if os.path.exists(metadata_path):
+            try:
+                with open(metadata_path, "r", encoding="utf-8") as f:
+                    meta = json.load(f)
+                saved_sklearn = meta.get("sklearn_version")
+                if saved_sklearn:
+                    cur_major = sklearn.__version__.split(".")[0]
+                    saved_major = saved_sklearn.split(".")[0]
+                    if cur_major != saved_major:
+                        print(f"⚠️ Warning: Model was trained with scikit-learn {saved_sklearn} but running on {sklearn.__version__}. Retraining recommended.")
+            except Exception:
+                pass
+
         return joblib.load(model_path)
 
     def get_metadata(self, pattern: int = 800, version: str = "latest") -> Dict[str, Any]:

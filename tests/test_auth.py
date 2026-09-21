@@ -63,3 +63,29 @@ def test_register_and_login_flow():
     me_resp = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {current_token}"})
     assert me_resp.status_code == 200
     assert me_resp.json()["email"] == email
+
+    # 7. Admin unauthorized access should fail
+    unauth_resp = client.get("/api/v1/auth/users?admin_key=wrong_key")
+    assert unauth_resp.status_code == 403
+
+    # 8. Admin authorized list candidates
+    admin_resp = client.get("/api/v1/auth/users?admin_key=neetpg_admin_2024")
+    assert admin_resp.status_code == 200
+    admin_data = admin_resp.json()
+    assert admin_data["status"] == "success"
+    assert admin_data["count"] >= 1
+    found = any(u["email"] == email for u in admin_data["users"])
+    assert found, "Newly registered user must be in admin candidate list"
+
+    # 9. Admin CSV export
+    csv_resp = client.get("/api/v1/auth/users/export?admin_key=neetpg_admin_2024")
+    assert csv_resp.status_code == 200
+    assert "text/csv" in csv_resp.headers["content-type"]
+    assert "Full Name,Email Address,Phone Number" in csv_resp.text
+    assert email in csv_resp.text
+
+    # 10. Admin dashboard HTML page
+    dash_resp = client.get("/admin")
+    assert dash_resp.status_code == 200
+    assert "Candidate Database | NEET PG Admin" in dash_resp.text
+

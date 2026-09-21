@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: neetpg-college-finder-api
+    env: python
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt && python3 -m src.models.train && python3 -m src.models.evaluate
+    startCommand: uvicorn src.api.app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ADMIN_KEY
+        generateValue: true
+      - key: DB_PATH
+        value: data/users.db
+      - key: PYTHON_VERSION
+        value: 3.13.0

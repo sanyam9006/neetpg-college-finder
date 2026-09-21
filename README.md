@@ -183,15 +183,51 @@ python3 -m src.models.evaluate
 pytest -v
 ```
 
-### 4. Start FastAPI Microservice
+### 4. Start FastAPI Microservice Locally
 ```bash
 uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --reload
 ```
 - Interactive Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
+- Admin Candidate Dashboard: [http://localhost:8000/admin](http://localhost:8000/admin)
 - Prometheus Telemetry: [http://localhost:8000/metrics](http://localhost:8000/metrics)
 - Health Check: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
 
-### 5. Docker Deployment
+### 5. Cloud Deployment (Render / Railway)
+
+#### Deploy to Render
+1. Go to [dashboard.render.com](https://dashboard.render.com) and click **New + → Web Service**.
+2. Connect your repository (`neetpg-college-finder`).
+3. Set the following settings (or select "Use render.yaml blueprint"):
+   - **Environment**: Python
+   - **Build Command**: `pip install -r requirements.txt && python3 -m src.models.train && python3 -m src.models.evaluate`
+   - **Start Command**: `uvicorn src.api.app:app --host 0.0.0.0 --port $PORT`
+4. Add Environment Variables:
+   - `ADMIN_KEY`: Set your private admin password (e.g. `my_secret_admin_key`).
+   - `DB_PATH`: `data/users.db` (or `/data/users.db` if attaching a persistent disk).
+5. (Optional Persistent Disk): Under **Disks**, add a disk mounted at `/data` with size 1GB and set `DB_PATH=/data/users.db`.
+
+#### Deploy to Railway
+1. Go to [railway.app/new](https://railway.app/new) and select **Deploy from GitHub repo**.
+2. Railway detects the root `Dockerfile` and `railway.json` automatically.
+3. In **Variables**, add `ADMIN_KEY` and optionally add a Railway **Volume** mounted at `/data` with `DB_PATH=/data/users.db`.
+
+#### Accessing Candidate Registrations
+- **Admin Web Dashboard**: Open `https://<your-backend>.onrender.com/admin?admin_key=<your_admin_key>` to view registered candidate details, filter by name/phone/email, and copy all phone numbers for WhatsApp broadcasts.
+- **Direct CSV Download**: Download the real-time registration spreadsheet at `https://<your-backend>.onrender.com/api/v1/auth/users/export?admin_key=<your_admin_key>`.
+
+#### Connecting Vercel Frontend to Cloud Backend
+Once your Render/Railway backend is live (e.g. `https://neetpg-api.onrender.com`):
+- Candidates visiting the site can directly use it by visiting `https://neetpg-college-finder.vercel.app/?backend=https://neetpg-api.onrender.com` (persists automatically in browser `localStorage`), OR
+- Add an external rewrite in `vercel.json`:
+  ```json
+  {
+    "rewrites": [
+      { "source": "/api/:path*", "destination": "https://<your-backend>.onrender.com/api/:path*" }
+    ]
+  }
+  ```
+
+### 6. Local Docker Deployment
 ```bash
 docker compose -f docker/docker-compose.yml up --build -d
 ```

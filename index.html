@@ -877,11 +877,19 @@
 <footer>
   <div>📅 Data based on <strong style="color:var(--text)">MCC NEET PG 2024 AIQ Round 1</strong> closing ranks &nbsp;·&nbsp; 228,540 candidates &nbsp;·&nbsp; Total PG seats: <strong style="color:var(--green)">58,400</strong></div>
   <div>INI-CET colleges (AIIMS/PGIMER/JIPMER etc.) have a separate exam — verify at <a href="https://aiimsexams.ac.in" target="_blank">aiimsexams.ac.in</a></div>
-  <div>For guidance only · Always verify with <a href="https://mcc.nic.in" target="_blank">mcc.nic.in</a> &nbsp;·&nbsp; Built with ❤️ for NEET PG 2025 aspirants</div>
+  <div>For guidance only · Always verify with <a href="https://mcc.nic.in" target="_blank">mcc.nic.in</a> &nbsp;·&nbsp; Built with ❤️ for NEET PG 2025 aspirants &nbsp;·&nbsp; <a href="/admin" style="color:var(--t2);text-decoration:none;font-size:0.75rem" title="Candidate Database Dashboard">🔐 Admin Portal</a></div>
 </footer>
 
 <script>
-const API_BASE = (window.location.protocol === "file:") ? "http://localhost:8000" : "";
+// Cloud Backend URL resolution (supports query param ?backend=..., localStorage, or default)
+const urlBackendParam = new URLSearchParams(window.location.search).get('backend');
+if (urlBackendParam) {
+  localStorage.setItem('neetpg_api_base', urlBackendParam.replace(/\/+$/, ''));
+}
+const API_BASE = window.NEETPG_API_URL 
+  || localStorage.getItem('neetpg_api_base') 
+  || ((window.location.protocol === "file:") ? "http://localhost:8000" : "");
+
 /*
  ═══════════════════════════════════════════════════════════════
   NEET PG 2025–26 COLLEGE DATABASE

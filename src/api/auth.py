@@ -12,7 +12,12 @@ EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
 
-DB_PATH = os.path.join("data", "users.db")
+import io
+import csv
+from fastapi.responses import StreamingResponse
+
+ADMIN_KEY = os.environ.get("ADMIN_KEY", "neetpg_admin_2024")
+DB_PATH = os.environ.get("DB_PATH", os.path.join("data", "users.db"))
 
 
 def get_db():
@@ -209,3 +214,73 @@ def get_current_user(authorization: Optional[str] = Header(None), db: sqlite3.Co
         token=row["token"],
         created_at=str(row["created_at"])
     )
+
+
+def verify_admin(admin_key: Optional[str] = None, x_admin_key: Optional[str] = Header(None), authorization: Optional[str] = Header(None)):
+    token = admin_key or x_admin_key
+    if not token and authorization:
+        token = authorization.replace("Bearer ", "").strip()
+    if not token or token != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Unauthorized: Invalid Admin Key.")
+    return True
+
+
+@router.get("/users")
+def get_all_registered_users(
+    admin_key: Optional[str] = None,
+    x_admin_key: Optional[str] = Header(None),
+    authorization: Optional[str] = Header(None),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    verify_admin(admin_key, x_admin_key, authorization)
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT id, name, email, phone, batch_year, created_at
+        FROM users
+        ORDER BY id DESC
+    """)
+    rows = cursor.fetchall()
+    users = [
+        {
+            "id": r["id"],
+            "name": r["name"],
+            "email": r["email"],
+            "phone": r["phone"],
+            "batch_year": r["batch_year"],
+            "created_at": str(r["created_at"])
+        }
+        for r in rows
+    ]
+    return {"status": "success", "count": len(users), "users": users}
+
+
+@router.get("/users/export")
+def export_registered_users_csv(
+    admin_key: Optional[str] = None,
+    x_admin_key: Optional[str] = Header(None),
+    authorization: Optional[str] = Header(None),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    verify_admin(admin_key, x_admin_key, authorization)
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT id, name, email, phone, batch_year, created_at
+        FROM users
+        ORDER BY id ASC
+    """)
+    rows = cursor.fetchall()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Full Name", "Email Address", "Phone Number", "MBBS Batch Year", "Registration Date"])
+    for r in rows:
+        writer.writerow([r["id"], r["name"], r["email"], r["phone"], r["batch_year"], r["created_at"]])
+    
+    output.seek(0)
+    filename = f"neetpg_candidates_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M')}.csv"
+    return StreamingResponse(
+        io.BytesIO(output.getvalue().encode("utf-8")),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+

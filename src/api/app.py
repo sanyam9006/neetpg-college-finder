@@ -3,7 +3,7 @@ import os
 from contextlib import asynccontextmanager
 from typing import Dict, Any
 from fastapi import FastAPI, HTTPException, Request, Response
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 
@@ -91,6 +91,216 @@ def serve_index():
     if os.path.exists("index.html"):
         return FileResponse("index.html")
     return {"message": "NEET PG College Finder API is running"}
+
+
+@app.get("/admin", response_class=HTMLResponse)
+def serve_admin():
+    return """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Candidate Database | NEET PG Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --muted: #64748b;
+    --primary: #0284c7;
+    --primary-hover: #0369a1;
+    --success: #10b981;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 24px 16px; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; }
+  .title-block h1 { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+  .title-block p { margin: 4px 0 0 0; color: var(--muted); font-size: 0.88rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 15px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; border: none; cursor: pointer; text-decoration: none; transition: 0.15s; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-hover); }
+  .btn-outline { background: #fff; color: var(--text); border: 1px solid var(--border); }
+  .btn-outline:hover { background: #f1f5f9; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .search-box { flex: 1; min-width: 240px; }
+  .search-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; font-family: inherit; }
+  .search-box input:focus { outline: none; border-color: var(--primary); }
+  .stat-badge { background: #e0f2fe; color: #0369a1; padding: 4px 12px; border-radius: 9999px; font-weight: 700; font-size: 0.82rem; }
+  .table-responsive { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; min-width: 700px; }
+  th { background: #f1f5f9; padding: 12px 14px; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--border); }
+  td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8fafc; }
+  .phone-link { color: #0284c7; text-decoration: none; font-weight: 600; }
+  .phone-link:hover { text-decoration: underline; }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #0f172a; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; display: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+  .auth-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 1000; }
+  .auth-box { background: #fff; border-radius: 12px; padding: 24px; max-width: 380px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+  .auth-box h3 { margin: 0 0 8px 0; font-size: 1.15rem; }
+  .auth-box p { color: var(--muted); font-size: 0.85rem; margin: 0 0 16px 0; }
+  .auth-box input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+<div class="auth-overlay" id="authOverlay" style="display:none">
+  <div class="auth-box">
+    <h3>🔐 Admin Verification</h3>
+    <p>Please enter your <code>ADMIN_KEY</code> to view candidate registrations.</p>
+    <form onsubmit="handleAuthSubmit(event)">
+      <input type="password" id="adminKeyInput" placeholder="Enter Admin Key..." required />
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Access Dashboard</button>
+    </form>
+  </div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <div class="title-block">
+      <h1>🩺 Candidate Registrations</h1>
+      <p>Real-time database of registered NEET PG medical candidates</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline" onclick="copyAllPhones()">📋 Copy All Phone Numbers</button>
+      <button class="btn btn-primary" onclick="downloadCSV()">📥 Export to CSV</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 Search candidate by name, email, or phone..." oninput="filterTable()">
+      </div>
+      <div>
+        <span class="stat-badge" id="countBadge">Loading candidates...</span>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table id="candidateTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Candidate Name</th>
+            <th>Email</th>
+            <th>Mobile / WhatsApp</th>
+            <th>MBBS Batch</th>
+            <th>Registered At</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;">Loading candidate records...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let adminKey = new URLSearchParams(window.location.search).get('admin_key') || sessionStorage.getItem('neetpg_admin_key') || '';
+let allCandidates = [];
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+
+function handleAuthSubmit(e) {
+  e.preventDefault();
+  adminKey = document.getElementById('adminKeyInput').value.trim();
+  sessionStorage.setItem('neetpg_admin_key', adminKey);
+  document.getElementById('authOverlay').style.display = 'none';
+  loadCandidates();
+}
+
+async function loadCandidates() {
+  if (!adminKey) {
+    document.getElementById('authOverlay').style.display = 'flex';
+    return;
+  }
+  try {
+    const res = await fetch(`/api/v1/auth/users?admin_key=${encodeURIComponent(adminKey)}`);
+    if (res.status === 403) {
+      sessionStorage.removeItem('neetpg_admin_key');
+      adminKey = '';
+      document.getElementById('authOverlay').style.display = 'flex';
+      showToast('❌ Invalid Admin Key');
+      return;
+    }
+    const data = await res.json();
+    allCandidates = data.users || [];
+    renderTable(allCandidates);
+  } catch(err) {
+    showToast('❌ Failed to fetch candidates: ' + err.message);
+  }
+}
+
+function renderTable(list) {
+  const tbody = document.getElementById('tableBody');
+  document.getElementById('countBadge').textContent = `${list.length} Candidate${list.length === 1 ? '' : 's'}`;
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;">No registered candidates found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map((c, idx) => `
+    <tr>
+      <td style="color:var(--muted)">${idx + 1}</td>
+      <td><strong>${escapeHtml(c.name)}</strong></td>
+      <td>${escapeHtml(c.email)}</td>
+      <td><a class="phone-link" href="https://wa.me/91${c.phone.replace(/\\D/g,'')}" target="_blank">📱 ${escapeHtml(c.phone)}</a></td>
+      <td><span style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:0.8rem">${escapeHtml(c.batch_year)}</span></td>
+      <td style="color:var(--muted);font-size:0.82rem">${new Date(c.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
+    </tr>
+  `).join('');
+}
+
+function filterTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  if (!q) { renderTable(allCandidates); return; }
+  const filtered = allCandidates.filter(c => 
+    c.name.toLowerCase().includes(q) || 
+    c.email.toLowerCase().includes(q) || 
+    c.phone.toLowerCase().includes(q) ||
+    c.batch_year.toLowerCase().includes(q)
+  );
+  renderTable(filtered);
+}
+
+function downloadCSV() {
+  if (!adminKey) { document.getElementById('authOverlay').style.display = 'flex'; return; }
+  window.open(`/api/v1/auth/users/export?admin_key=${encodeURIComponent(adminKey)}`, '_blank');
+}
+
+function copyAllPhones() {
+  if (!allCandidates.length) { showToast('No candidate phone numbers to copy.'); return; }
+  const phones = allCandidates.map(c => c.phone).filter(Boolean).join(', ');
+  navigator.clipboard.writeText(phones).then(() => {
+    showToast(`✅ Copied ${allCandidates.length} phone numbers to clipboard!`);
+  }).catch(() => {
+    showToast('Failed to copy to clipboard.');
+  });
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+window.addEventListener('DOMContentLoaded', loadCandidates);
+</script>
+</body>
+</html>
+"""
+
 
 
 # In-memory IP rate limiter for feedback submissions to prevent spam/poisoning

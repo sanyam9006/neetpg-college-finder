@@ -325,6 +325,7 @@ def check_feedback_rate_limit(client_ip: str, limit: int = 10, window_seconds: i
 
 
 
+@app.get("/health")
 @app.get("/api/v1/health")
 def health_check():
     loaded_patterns = [p for p, m in models.items() if m is not None]

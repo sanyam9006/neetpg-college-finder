@@ -881,14 +881,17 @@
 </footer>
 
 <script>
-// Cloud Backend URL resolution (supports query param ?backend=..., localStorage, or default)
+// Cloud Backend URL resolution (Render Production Backend)
+const RENDER_BACKEND_URL = "https://neetpg-college-finder.onrender.com";
 const urlBackendParam = new URLSearchParams(window.location.search).get('backend');
 if (urlBackendParam) {
   localStorage.setItem('neetpg_api_base', urlBackendParam.replace(/\/+$/, ''));
 }
+const savedBase = localStorage.getItem('neetpg_api_base');
 const API_BASE = window.NEETPG_API_URL 
-  || localStorage.getItem('neetpg_api_base') 
-  || ((window.location.protocol === "file:") ? "http://localhost:8000" : "");
+  || (savedBase && savedBase.startsWith("http") ? savedBase : "") 
+  || ((window.location.protocol === "file:") ? "http://localhost:8000" : RENDER_BACKEND_URL);
+
 
 /*
  ═══════════════════════════════════════════════════════════════
@@ -1922,8 +1925,12 @@ let isApiConnected = false;
 async function checkApiHealth() {
   const badge = document.getElementById('apiStatusBadge');
   try {
+    if (badge) {
+      badge.className = "api-badge online";
+      badge.innerHTML = "⏳ Connecting to Cloud API...";
+    }
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(`${API_BASE}/api/v1/health`, { signal: controller.signal });
     clearTimeout(timeoutId);
 
@@ -1932,7 +1939,7 @@ async function checkApiHealth() {
       isApiConnected = true;
       if (badge) {
         badge.className = "api-badge online";
-        badge.innerHTML = "🟢 MLOps API v1.0 Active";
+        badge.innerHTML = "🟢 Cloud API Active (Render)";
         badge.title = `FastAPI microservice online · Models: ${data.models_loaded.join(', ')} · Colleges: ${data.colleges_loaded}`;
       }
     } else {

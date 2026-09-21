@@ -304,7 +304,14 @@ window.addEventListener('DOMContentLoaded', loadCandidates);
 
 
 # In-memory IP rate limiter for feedback submissions to prevent spam/poisoning
+# Note: Suitable for single-worker or local dev. Multi-worker/multi-pod production would use Redis.
 feedback_rate_limits = {}
+
+def get_client_ip(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "127.0.0.1"
 
 def check_feedback_rate_limit(client_ip: str, limit: int = 10, window_seconds: int = 60) -> bool:
     now = time.time()
@@ -315,6 +322,7 @@ def check_feedback_rate_limit(client_ip: str, limit: int = 10, window_seconds: i
     timestamps.append(now)
     feedback_rate_limits[client_ip] = timestamps
     return True
+
 
 
 @app.get("/api/v1/health")
@@ -492,7 +500,7 @@ def unified_predict_and_recommend(req: UnifiedPredictAndRecommendRequest):
 
 @app.post("/api/v1/feedback", response_model=FeedbackResponse)
 def submit_feedback(req: FeedbackRequest, request: Request):
-    client_ip = request.client.host if request.client else "127.0.0.1"
+    client_ip = get_client_ip(request)
     if not check_feedback_rate_limit(client_ip, limit=10, window_seconds=60):
         raise HTTPException(
             status_code=429,

@@ -54,7 +54,8 @@ def test_720_pattern_model(model_720):
 
 
 def test_empirical_accuracy_loocv():
-    from src.models.evaluate import evaluate_model_quality_gates, backtest_recommender
+    from src.models.evaluate import evaluate_model_quality_gates, verify_recommender_consistency
     assert evaluate_model_quality_gates(800) is True
     assert evaluate_model_quality_gates(720) is True
-    assert backtest_recommender() is True
+    assert verify_recommender_consistency() is True
+

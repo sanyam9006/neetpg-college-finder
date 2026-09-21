@@ -45,75 +45,65 @@ A naive **linear interpolation on raw ranks** produces huge errors in top percen
 Log-linear interpolation ($\ln(\text{rank})$ linear with marks) captures this exponential curvature naturally while maintaining strict monotonicity ($\text{marks}_1 > \text{marks}_2 \implies \text{rank}_1 \le \text{rank}_2$).
 
 ### 2. Empirical Validation vs. Baseline (LOOCV)
-We evaluated the model using Leave-One-Out Cross-Validation (LOOCV) against actual NBE benchmark data, compared against a linear interpolation baseline:
+We evaluated the model using Leave-One-Out Cross-Validation (LOOCV) on published NBE benchmark anchors, compared against a linear interpolation baseline:
 
-| Exam Pattern | Log-Linear Model MAPE | Linear Baseline MAPE | Relative Improvement | P10–P90 Band Coverage |
-|---|---|---|---|---|
-| **800 Marks (2024–25)** | **4.99%** | 20.98% | **4.2× more accurate** | **91.3%** |
-| **720 Marks (2026 Shift)** | **6.29%** | 24.79% | **3.9× more accurate** | **80.0%** |
+| Exam Pattern | Benchmark Anchors (N) | Log-Linear Model MAPE | Linear Baseline MAPE | Relative Improvement | P10–P90 Heuristic Band Coverage |
+|---|---|---|---|---|---|
+| **800 Marks (2024–25)** | **N = 25** | **4.99%** | 20.98% | **4.2× more accurate** | **91.3%** |
+| **720 Marks (2026 Shift)** | **N = 22** | **6.29%** | 24.79% | **3.9× more accurate** | **80.0%** |
 
 ### 3. What the Uncertainty Bands (P10 / P90) Mean
-The model outputs a median estimate ($P_{50}$) alongside optimistic ($P_{10}$, $-12\%$) and conservative ($P_{90}$, $+12\%$) bounds:
-- These bounds model **empirical year-to-year exam volatility** (shift difficulty variation, cohort size fluctuations, normalization noise).
-- They are **not** Bayesian posterior quantiles from thousands of individual user records.
-- On held-out benchmark points, **91.3% of true ranks fall within the P10–P90 interval**.
+The model outputs a median estimate ($P_{50}$) alongside illustrative lower ($P_{10}$, $-12\%$) and upper ($P_{90}$, $+12\%$) bounds:
+- These bounds represent a **heuristic score-volatility envelope** reflecting typical annual difficulty shifts and cohort size changes.
+- They are **not** parametric Bayesian posterior quantiles.
+- Across historical NBE anchors, 91.3% of actual benchmark ranks fall within this envelope.
 
 ---
 
 ## 🏥 College Cutoff Data & Provenance
 
-### Data Sources
-- **All India Quota (AIQ) 50% Round 1 Allotment Results**: Official allotment PDFs published by the Medical Counselling Committee ([mcc.nic.in](https://mcc.nic.in)).
-- **Qualifying Percentile Benchmarks**: Official press releases from the National Board of Examinations in Medical Sciences (NBEMS).
-- **Coverage**: **351 medical colleges** across 27 Indian states and Union Territories (Government, Private, Deemed Universities, and INI-CET institutes).
+### Data Sources & Scope
+- **MCC NEET PG 2024 All India Quota (AIQ 50%) Round 1**: Sourced from official seat allotment PDFs published by the Medical Counselling Committee ([mcc.nic.in](https://mcc.nic.in)).
+- **Qualifying Percentiles**: Official notification thresholds published by NBEMS.
+- **Coverage**: **351 accredited medical colleges** across 27 Indian states and Union Territories.
 
-### Branch Multipliers (Empirical MCC Ratios)
-Because cutoffs are branch-specific, each college's cutoffs across 22 specialties are calibrated against the anchor MD General Medicine closing rank ($3,803$ AIQ R1):
+### Indicative Specialty Multipliers
+To provide branch guidance across institutions where full granular round-wise matrices are unavailable, specialty cutoffs are estimated using demand multipliers relative to the college's MD General Medicine Round 1 closing rank ($3,803$ AIQ R1):
 
-| Specialty | AIQ R1 Overall Closing | Multiplier vs Gen Med | Example: MAMC (Base: 39) | Example: SMS Jaipur (Base: 455) |
+| Specialty | AIQ R1 Reference Closing | Multiplier vs Gen Med | Example: MAMC (Base: 39) | Example: SMS Jaipur (Base: 455) |
 |---|---|---|---|---|
-| **MD Radio-diagnosis** | ~2,125 | **0.56** | Rank ≤ 22 | Rank ≤ 255 |
-| **MD Dermatology** | ~2,639 | **0.69** | Rank ≤ 27 | Rank ≤ 314 |
-| **MD General Medicine** | 3,803 | **1.00** | Rank ≤ 39 | Rank ≤ 455 |
-| **MD Pediatrics** | ~6,450 | **1.70** | Rank ≤ 66 | Rank ≤ 774 |
-| **MS Obstetrics & Gyn.** | ~9,071 | **2.39** | Rank ≤ 93 | Rank ≤ 1,087 |
-| **MS General Surgery** | ~10,797 | **2.84** | Rank ≤ 111 | Rank ≤ 1,292 |
-| **MS Orthopedics** | ~11,864 | **3.12** | Rank ≤ 122 | Rank ≤ 1,420 |
-| **MD Anaesthesiology** | ~20,000 | **5.26** | Rank ≤ 205 | Rank ≤ 2,393 |
-| **MD Pathology** | ~35,000 | **9.20** | Rank ≤ 359 | Rank ≤ 4,186 |
+| **MD Radio-diagnosis** | ~2,125 | **0.56** | Est. R1 ≤ 22 | Est. R1 ≤ 255 |
+| **MD Dermatology** | ~2,639 | **0.69** | Est. R1 ≤ 27 | Est. R1 ≤ 314 |
+| **MD General Medicine** | 3,803 | **1.00** | Est. R1 ≤ 39 | Est. R1 ≤ 455 |
+| **MD Pediatrics** | ~6,450 | **1.70** | Est. R1 ≤ 66 | Est. R1 ≤ 774 |
+| **MS Obstetrics & Gyn.** | ~9,071 | **2.39** | Est. R1 ≤ 93 | Est. R1 ≤ 1,087 |
+| **MS General Surgery** | ~10,797 | **2.84** | Est. R1 ≤ 111 | Est. R1 ≤ 1,292 |
+| **MS Orthopedics** | ~11,864 | **3.12** | Est. R1 ≤ 122 | Est. R1 ≤ 1,420 |
+| **MD Anaesthesiology** | ~20,000 | **5.26** | Est. R1 ≤ 205 | Est. R1 ≤ 2,393 |
+| **MD Pathology** | ~35,000 | **9.20** | Est. R1 ≤ 359 | Est. R1 ≤ 4,186 |
 
-### Category Ratios (Relative to UR)
-Derived from MCC 2024 Round 1 AIQ General Medicine closing ranks:
-- **EWS**: $1.63\times$
-- **OBC**: $3.07\times$
-- **SC**: $8.50\times$
-- **ST**: $13.79\times$
-- **PH**: $8.00\times$ (approximate)
-
-### Known Gaps & Limitations
-1. **AIQ 50% Round 1 Only**: Cutoffs represent All India Quota Round 1. State 85% quota, institutional internal quotas (e.g. DU, IPU, BHU internal), and stray vacancy rounds are not currently modeled.
-2. **Specialty Availability**: Not every college offers all 22 accredited branches; only accredited offerings are displayed per college.
-3. **Seat Matrix Changes**: NMC seat approvals change annually; new seats create 6–10% rank softening in later counselling rounds.
+### Important Data Limitations (Please Read)
+1. **Multipliers are Indicative Baselines**: Branch demand varies between colleges (e.g. Radio-diagnosis is comparatively tighter at premier centers than peripheral institutes). Multipliers provide a directional estimate, not official individual cutoffs.
+2. **Round 1 is Not the Final Closing Rank**: Seats consistently close at significantly higher (more relaxed) ranks across Round 2, Round 3, and stray vacancy rounds. The tool labels all cutoffs as Round 1 baselines.
+3. **Branch Offerings Vary**: Not all 351 colleges offer all 22 branches. The tool displays only accredited specialties per college.
+4. **Quota Scope**: All India Quota 50% only. State 85% quotas, institutional quotas (DU, IPU, BHU, AMU), and private management quotas are not modeled.
 
 ---
 
-## 📊 Probabilistic Recommendation & Backtesting
+## 📊 Recommendation Decision Boundaries & Consistency
 
-Each recommendation computes:
-$$\text{Safety Margin} = \text{Effective Cutoff} - \text{Candidate Rank}$$
+Each recommendation computes candidate distance from indicative Round 1 cutoffs:
 $$\text{Safety Ratio} = \frac{\text{Effective Cutoff}}{\text{Candidate Rank}}$$
 
-| Category | Ratio Threshold | Definition |
+| Category | Ratio Threshold | Meaning |
 |---|---|---|
-| **🛡️ Safety Seat** | $\text{Ratio} \ge 1.30$ | Cutoff is $\ge 30\%$ above candidate rank (very safe bet) |
-| **✨ High Chance** | $1.10 \le \text{Ratio} < 1.30$ | Cutoff is $10\%\text{–}30\%$ above candidate rank |
-| **⚖️ Competitive** | $1.00 \le \text{Ratio} < 1.10$ | Cutoff is within $10\%$ of candidate rank (marginal) |
-| **🎯 Reach / Ambitious** | $\text{Ratio} < 1.00$ | Cutoff closed above candidate rank in Round 1 |
+| **Safety Seat** | $\text{Ratio} \ge 1.30$ | Cutoff is $\ge 30\%$ above candidate rank |
+| **High Chance** | $1.05 \le \text{Ratio} < 1.30$ | Cutoff is $5\%\text{–}30\%$ above candidate rank |
+| **Competitive** | $0.90 \le \text{Ratio} < 1.05$ | Cutoff is within $\pm 10\%$ of candidate rank |
+| **Reach** | $\text{Ratio} < 0.90$ | Cutoff closed well above candidate rank in Round 1 |
 
-### Backtesting Results
-In automated backtesting over **1,143 college-specialty recommendations** across ranks 500 to 40,000:
-- **100% of colleges categorized as "Safety Seat"** had historical closing ranks above the candidate's rank.
-- Even under a simulated **10% rank inflation shift**, $>96\%$ of safety-seat recommendations remained safely above closing ranks.
+Automated gatekeeper tests verify that probability tiers partition rank space consistently and monotonically without boundary inversions across all candidate rank scenarios.
+
 
 ---
 
@@ -178,10 +168,11 @@ python3 -m src.models.train
 python3 -m src.models.evaluate
 ```
 
-### 3. Run Test Suite
+### 3. Run Test Suite (25 Automated Tests)
 ```bash
 pytest -v
 ```
+Includes data pipeline validation, recommender logic, LOOCV accuracy gates, API validation, and a Python-to-JavaScript inference engine parity test (`tests/test_parity.py`).
 
 ### 4. Start FastAPI Microservice Locally
 ```bash
@@ -241,12 +232,12 @@ Before any model artifact is accepted into `models/`, it must pass **5 automated
 2. **Bounds Gate**: All outputs must strictly lie within $[1, 230114]$.
 3. **Interval Integrity Gate**: $P_{10} \le P_{50} \le P_{90}$ must hold universally.
 4. **Cutoff Sanity Gate**: Confirms category percentile thresholds.
-5. **Empirical Accuracy Gate (LOOCV)**: Held-out cross-validation MAPE must be $<7.0\%$ (actual: **4.99%** on 800-pattern, **6.29%** on 720-pattern) and must outperform a linear baseline. Interval coverage must be $\ge 80.0\%$ (actual: **91.3%** on 800-pattern).
+5. **Empirical Accuracy Gate (LOOCV)**: Held-out cross-validation MAPE must be $<7.0\%$ (actual: **4.99%** on 800-pattern, **6.29%** on 720-pattern) and must outperform a linear baseline.
 
 ---
 
 ## 🔒 API Hardening & Security
-- **Feedback Rate Limiting**: `/api/v1/feedback` enforces in-memory IP-based rate limiting (max 10 requests/minute per client IP) to protect drift logs against spam and data poisoning.
+- **Feedback Rate Limiting**: `/api/v1/feedback` enforces in-memory IP-based rate limiting (max 10 requests/minute per client IP) using `X-Forwarded-For` proxy resolution to protect drift logs against spam and data poisoning.
 - **Strict Schema Validation**: Request bounds are enforced via Pydantic (`score` $\in [0, 800]$, `rank` $\in [1, 250000]$, `notes` length $\le 500$ chars).
 - **Environment Compatibility**: Model metadata records the exact `scikit-learn` and Python versions used during training, warning on major version mismatches upon loading.
 

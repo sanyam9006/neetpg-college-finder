@@ -105,9 +105,11 @@
     /* HEADER */
     header{padding:12px 0;border-bottom:1px solid var(--border);background:var(--header-bg);backdrop-filter:blur(20px);position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm);transition:background .25s,border-color .25s}
     .hdr{display:flex;align-items:center;justify-content:space-between;max-width:1300px;margin:0 auto;padding:0 20px;gap:12px}
+    .brand-wrap{display:flex;flex-direction:column;justify-content:center}
     .logo{display:flex;align-items:center;gap:10px;font-family:'Outfit',sans-serif;font-weight:900;font-size:1.25rem;color:var(--text);white-space:nowrap}
     .logo em{font-style:normal;color:var(--accent)}
     .logo-box{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),#3b82f6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:#fff;box-shadow:0 3px 10px rgba(37,99,235,.28);flex-shrink:0}
+    .logo-sub{font-size:.66rem;color:var(--t2);font-weight:600;margin-top:2px;padding-left:46px;letter-spacing:.01em;white-space:nowrap}
     .hdr-mid{display:flex;gap:18px;align-items:center}
     .hs{font-size:.76rem;color:var(--t2);white-space:nowrap}
     .hs strong{color:var(--green-text);font-weight:700}
@@ -405,6 +407,7 @@
       .hdr{padding:0 12px}
       .fg{grid-template-columns:1fr}
       .pred-grid{grid-template-columns:1fr}
+      .logo-sub{padding-left:0;font-size:.6rem}
     }
   </style>
 </head>
@@ -418,7 +421,10 @@
 
 <header>
   <div class="hdr">
-    <div class="logo"><div class="logo-box">🩺</div>NEETPGFinder</div>
+    <div class="brand-wrap">
+      <div class="logo"><div class="logo-box">🩺</div>NEETPGFinder</div>
+      <div class="logo-sub">Created by Dr. Darshan Jain (Batch 2021)</div>
+    </div>
     <div class="hdr-mid">
       <span class="hs">📊 <strong>Marks &amp; Rank</strong> Predictor</span>
       <span class="hs">🏥 <strong>351</strong> Medical Colleges</span>
@@ -430,18 +436,23 @@
       </button>
       <div id="authHeaderWidget"></div>
       <span id="apiStatusBadge" class="api-badge offline">⚪ MLOps Checking...</span>
-      <span class="badge">2025–26 DATA</span>
+      <span class="badge">MCC 2024 AIQ R1 DATA</span>
     </div>
   </div>
 </header>
 
 <div class="wrap">
   <section class="hero">
-    <div class="htag">🎯 NEET PG 2025–26 Marks &amp; Rank College Finder</div>
+    <div class="htag">NEET PG Marks &amp; Rank College Finder · MCC 2024 Round 1 Baseline</div>
     <h1>Predict Your Rank from Marks<br/>&amp; Find <em>Eligible Colleges</em></h1>
-    <div class="update-chip">✅ Live Marks-to-Rank Predictor &nbsp;·&nbsp; 2025–26 Cutoffs &nbsp;·&nbsp; 351 Medical Colleges &nbsp;·&nbsp; 22 Accredited Specialties</div>
-    <p class="sub">Enter your NEET PG marks to estimate your All India Rank (AIR), percentile, and branch chances — or search directly with your rank to see all Government, Private, and Deemed colleges you qualify for.</p>
+    <div class="update-chip">Data Baseline: MCC 2024 All India 50% Quota Round 1 &nbsp;·&nbsp; 351 Medical Colleges &nbsp;·&nbsp; 22 Specialties (Indicative Estimates)</div>
+    <p class="sub">Enter your NEET PG score to estimate your All India Rank (AIR), percentile, and branch prospects based on historical NBE benchmarks and MCC 2024 Round 1 cutoffs.</p>
   </section>
+
+  <!-- DATA PROVENANCE & TRANSPARENCY BANNER -->
+  <div style="background:var(--card);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.84rem;color:var(--t2);line-height:1.5;">
+    <strong>📌 Transparency &amp; Counseling Notice:</strong> College cutoffs shown are <strong>indicative Round 1 closing ranks</strong> derived from MCC 2024 AIQ 50% allotments. Seats consistently close at significantly higher ranks in Round 2, Round 3, and stray vacancy rounds. Specialty cutoffs use indicative demand multipliers relative to General Medicine baselines. Always consult official seat matrices on <a href="https://mcc.nic.in" target="_blank" style="color:var(--accent);font-weight:600">mcc.nic.in</a>.
+  </div>
 
   <!-- SEARCH & PREDICTION CARD -->
   <div class="sc">
@@ -877,7 +888,7 @@
 <footer>
   <div>📅 Data based on <strong style="color:var(--text)">MCC NEET PG 2024 AIQ Round 1</strong> closing ranks &nbsp;·&nbsp; 228,540 candidates &nbsp;·&nbsp; Total PG seats: <strong style="color:var(--green)">58,400</strong></div>
   <div>INI-CET colleges (AIIMS/PGIMER/JIPMER etc.) have a separate exam — verify at <a href="https://aiimsexams.ac.in" target="_blank">aiimsexams.ac.in</a></div>
-  <div>For guidance only · Always verify with <a href="https://mcc.nic.in" target="_blank">mcc.nic.in</a> &nbsp;·&nbsp; Built with ❤️ for NEET PG 2025 aspirants &nbsp;·&nbsp; <a href="/admin" style="color:var(--t2);text-decoration:none;font-size:0.75rem" title="Candidate Database Dashboard">🔐 Admin Portal</a></div>
+  <div>For guidance only · Always verify with <a href="https://mcc.nic.in" target="_blank">mcc.nic.in</a> &nbsp;·&nbsp; Built with ❤️ by Dr. Darshan Jain (Batch 2021) for NEET PG aspirants &nbsp;·&nbsp; <a href="/admin" style="color:var(--t2);text-decoration:none;font-size:0.75rem" title="Candidate Database Dashboard">🔐 Admin Portal</a></div>
 </footer>
 
 <script>
@@ -1123,61 +1134,58 @@ const TCLS={Government:'tg-g','INI-CET':'tg-n',Private:'tg-p',Deemed:'tg-d'};
 const PAGE_SIZE=30;
 
 /* ══════ MARKS TO RANK DATA POINTS ══════ */
+/* ══════ MARKS TO RANK DATA POINTS ══════ */
 const POINTS_800 = [
   { m: 800, r: 1, p: 99.999 },
-  { m: 730, r: 10, p: 99.996 },
-  { m: 710, r: 40, p: 99.98 },
-  { m: 690, r: 100, p: 99.96 },
-  { m: 670, r: 250, p: 99.89 },
-  { m: 650, r: 600, p: 99.74 },
-  { m: 630, r: 1200, p: 99.47 },
-  { m: 610, r: 2500, p: 98.91 },
-  { m: 600, r: 3500, p: 98.47 },
-  { m: 580, r: 6000, p: 97.37 },
-  { m: 560, r: 10000, p: 95.62 },
-  { m: 540, r: 15000, p: 93.44 },
-  { m: 520, r: 22000, p: 90.37 },
-  { m: 500, r: 30000, p: 86.87 },
-  { m: 475, r: 42000, p: 81.62 },
-  { m: 450, r: 55000, p: 75.93 },
-  { m: 425, r: 68000, p: 70.24 },
-  { m: 400, r: 82000, p: 64.12 },
-  { m: 375, r: 95000, p: 58.43 },
-  { m: 350, r: 106000, p: 53.62 },
-  { m: 320, r: 115057, p: 49.70 },
-  { m: 276, r: 138068, p: 39.60 },
-  { m: 245, r: 160000, p: 30.00 },
-  { m: 200, r: 185000, p: 19.10 },
-  { m: 150, r: 210000, p: 8.10 },
-  { m: 100, r: 224000, p: 2.00 },
-  { m: 0,   r: 228540, p: 0.01 }
+  { m: 750, r: 7, p: 99.997 },
+  { m: 720, r: 25, p: 99.990 },
+  { m: 700, r: 85, p: 99.960 },
+  { m: 675, r: 280, p: 99.880 },
+  { m: 650, r: 750, p: 99.670 },
+  { m: 625, r: 1800, p: 99.220 },
+  { m: 600, r: 3600, p: 98.430 },
+  { m: 575, r: 6500, p: 97.170 },
+  { m: 550, r: 10500, p: 95.430 },
+  { m: 525, r: 16000, p: 93.000 },
+  { m: 500, r: 23500, p: 89.800 },
+  { m: 475, r: 33000, p: 85.600 },
+  { m: 450, r: 44000, p: 80.800 },
+  { m: 425, r: 56000, p: 75.600 },
+  { m: 400, r: 69000, p: 70.000 },
+  { m: 375, r: 82000, p: 64.300 },
+  { m: 350, r: 94000, p: 59.100 },
+  { m: 320, r: 104000, p: 54.800 },
+  { m: 276, r: 115057, p: 50.000 },
+  { m: 245, r: 138068, p: 40.000 },
+  { m: 200, r: 172000, p: 25.200 },
+  { m: 150, r: 205000, p: 10.900 },
+  { m: 100, r: 222000, p: 3.500 },
+  { m: 0,   r: 230114, p: 0.010 }
 ];
 
 const POINTS_720 = [
   { m: 720, r: 1, p: 99.999 },
-  { m: 660, r: 10, p: 99.996 },
-  { m: 640, r: 40, p: 99.98 },
-  { m: 620, r: 100, p: 99.96 },
-  { m: 600, r: 300, p: 99.87 },
-  { m: 580, r: 800, p: 99.65 },
-  { m: 560, r: 1800, p: 99.21 },
-  { m: 540, r: 3500, p: 98.47 },
-  { m: 520, r: 6000, p: 97.37 },
-  { m: 500, r: 10000, p: 95.62 },
-  { m: 480, r: 15000, p: 93.44 },
-  { m: 460, r: 22000, p: 90.37 },
-  { m: 440, r: 30000, p: 86.87 },
-  { m: 420, r: 40000, p: 82.50 },
-  { m: 400, r: 52000, p: 77.25 },
-  { m: 375, r: 68000, p: 70.24 },
-  { m: 350, r: 82000, p: 64.12 },
-  { m: 320, r: 100000, p: 56.23 },
-  { m: 290, r: 115057, p: 49.70 },
-  { m: 248, r: 138068, p: 39.60 },
-  { m: 200, r: 175000, p: 23.44 },
-  { m: 150, r: 205000, p: 10.30 },
-  { m: 100, r: 222000, p: 2.80 },
-  { m: 0,   r: 228540, p: 0.01 }
+  { m: 680, r: 7, p: 99.997 },
+  { m: 650, r: 25, p: 99.990 },
+  { m: 630, r: 85, p: 99.960 },
+  { m: 600, r: 350, p: 99.850 },
+  { m: 575, r: 1000, p: 99.560 },
+  { m: 550, r: 2500, p: 98.900 },
+  { m: 520, r: 5200, p: 97.700 },
+  { m: 490, r: 9500, p: 95.800 },
+  { m: 460, r: 15500, p: 93.200 },
+  { m: 430, r: 23500, p: 89.700 },
+  { m: 400, r: 34000, p: 85.200 },
+  { m: 370, r: 47000, p: 79.500 },
+  { m: 340, r: 62000, p: 73.000 },
+  { m: 310, r: 79000, p: 65.600 },
+  { m: 280, r: 97000, p: 57.800 },
+  { m: 248, r: 115057, p: 50.000 },
+  { m: 220, r: 138068, p: 40.000 },
+  { m: 180, r: 172000, p: 25.200 },
+  { m: 130, r: 205000, p: 10.900 },
+  { m: 90,  r: 222000, p: 3.500 },
+  { m: 0,   r: 230114, p: 0.010 }
 ];
 
 /* ══════ APP STATE ══════ */
@@ -1338,8 +1346,8 @@ function calculatePrediction(score, pattern, category) {
       const logR1 = Math.log(p1.r);
       const logR2 = Math.log(p2.r);
       predRank = Math.round(Math.exp(logR1 + t * (logR2 - logR1)));
-      minRank = Math.max(1, Math.round(predRank * 0.90));
-      maxRank = Math.round(predRank * 1.10);
+      minRank = Math.max(1, Math.round(predRank * 0.88));
+      maxRank = Math.round(predRank * 1.12);
       percentile = +(p1.p - t * (p1.p - p2.p)).toFixed(1);
       break;
     }
@@ -1681,7 +1689,7 @@ function render() {
           <div class="tbb-name">${chosen.name}</div>
           <div class="tbb-metrics">
             <div class="tbb-metric">
-              <span class="tbb-mlbl">2025–26 Cutoff (${cat})</span>
+              <span class="tbb-mlbl">Est. 2024 R1 Cutoff (${cat})</span>
               <span class="tbb-mval">${chosen.cutoff.toLocaleString('en-IN')}</span>
             </div>
             <div class="tbb-metric">
@@ -1701,7 +1709,7 @@ function render() {
           <div class="bsb-header">
             <div class="bsb-title">
               <span>🎓</span>
-              <strong>${eligibleBranches.length} of ${c.sp.length} Branches Eligible</strong>
+              <strong>${eligibleBranches.length} of ${c.sp.length} Branches Estimated Eligible</strong>
             </div>
             <span class="bsb-sub">at AIR #${targetRank.toLocaleString('en-IN')}</span>
           </div>
@@ -1710,7 +1718,7 @@ function render() {
               <div class="eh-item">
                 <span class="eh-check">✓</span>
                 <span class="eh-name">${b.name}</span>
-                <span class="eh-cutoff">Cutoff: ~${b.cutoff.toLocaleString('en-IN')}</span>
+                <span class="eh-cutoff">Est. R1: ~${b.cutoff.toLocaleString('en-IN')}</span>
               </div>
             `).join('')}
           </div>
@@ -1731,15 +1739,15 @@ function render() {
           </div>
         </div>
         <div class="bd-cutoff-col">
-          <span class="bd-cutoff-lbl">Cutoff</span>
+          <span class="bd-cutoff-lbl">Est. R1 Cutoff</span>
           <span class="bd-cutoff-val">${b.cutoff.toLocaleString('en-IN')}</span>
         </div>
       </div>
     `).join('');
 
     const cutoffLabel = selectedSpecialty 
-      ? `2025–26 ${selectedSpecialty} Cutoff (${cat})` 
-      : `Anchor MD Gen Med Cutoff (${cat})`;
+      ? `Est. 2024 R1 ${selectedSpecialty} Cutoff (${cat})` 
+      : `Est. 2024 R1 Anchor Cutoff (${cat})`;
     const displayCutoff = selectedSpecialty 
       ? getSpecialtyCutoff(baseCutoff, selectedSpecialty) 
       : baseCutoff;
@@ -1766,14 +1774,14 @@ function render() {
 
         <div class="branch-actions">
           <button type="button" class="view-branches-btn" onclick="toggleBranchDrawer('${cardId}')" id="btn-${cardId}">
-            <span>📊 View Branch-Wise Cutoffs (${c.sp.length} Branches)</span>
+            <span>📊 View Estimated Branch Cutoffs (${c.sp.length} Specialties)</span>
             <span class="btn-arrow" id="arr-${cardId}">▼</span>
           </button>
         </div>
 
         <div id="${cardId}" class="branch-drawer" style="display:none;">
           <div class="bd-head">
-            <div class="bd-title">All Branches · Closing Ranks (${cat})</div>
+            <div class="bd-title">Offered Specialties · Indicative R1 Cutoffs (${cat})</div>
             <div class="bd-search-wrap">
               <input type="text" class="bd-search" placeholder="Search branch (e.g. ortho)..." oninput="filterDrawerBranches('${cardId}', this.value)" />
             </div>

@@ -84,8 +84,8 @@ console.log('Colleges returned count:', results.length);
 
 const cardHtml = elements.grd.innerHTML;
 console.log('Contains [object HTMLSelectElement]:', cardHtml.includes('[object HTMLSelectElement]'));
-console.log('Contains "View Branch-Wise Cutoffs":', cardHtml.includes('View Branch-Wise Cutoffs'));
-console.log('Contains "Branches Eligible":', cardHtml.includes('Branches Eligible'));
+console.log('Contains "View Estimated Branch Cutoffs":', cardHtml.includes('View Estimated Branch Cutoffs'));
+console.log('Contains "Branches Estimated Eligible":', cardHtml.includes('Branches Estimated Eligible'));
 
 if (cardHtml.includes('[object HTMLSelectElement]')) {
   throw new Error('FAILED: Found [object HTMLSelectElement] in card output!');

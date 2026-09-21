@@ -4,7 +4,7 @@ version = "1.0.0"
 description = "NEET PG Rank Predictor & College Recommender with ML pipeline"
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "fastapi==0.115.5",
     "uvicorn[standard]==0.32.0",
@@ -23,5 +23,3 @@ dev = [
     "httpx==0.27.2"
 ]
 
-[tool.vercel]
-entrypoint = "src.api.app:app"

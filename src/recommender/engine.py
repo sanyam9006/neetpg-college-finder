@@ -3,34 +3,35 @@ from pydantic import BaseModel, Field
 from src.data.dataset_loader import DatasetLoader
 
 # Recognized 22 NEET PG Specialties with empirical cutoff multipliers relative to MD General Medicine
+# Exact ratios from MCC NEET PG 2024 AIQ Round 1 branch-wise closing ranks / MD General Medicine (3,803)
 SPECIALTY_MULTIPLIERS: Dict[str, float] = {
-    # Clinical (Super-Competitive)
-    "MD Radio-diagnosis": 0.28,
-    "MD Dermatology, Venereology & Leprosy": 0.45,
+    # Super-Competitive Clinical
+    "MD Radio-diagnosis": 0.56,
+    "MD Dermatology, Venereology & Leprosy": 0.69,
     "MD General Medicine": 1.00,  # Base clinical anchor
-    "MD Pediatrics": 1.15,
+    "MD Pediatrics": 1.70,
     # Core Surgical & Clinical
-    "MS Obstetrics & Gynaecology": 1.30,
-    "MS Orthopedics": 1.25,
-    "MS General Surgery": 1.40,
-    "MD Respiratory Medicine": 1.45,
+    "MS Obstetrics & Gynaecology": 2.39,
+    "MS General Surgery": 2.84,
+    "MS Orthopedics": 3.12,
+    "MS Ophthalmology": 3.68,
+    "MD Respiratory Medicine": 3.94,
+    "MS ENT": 4.21,
     # Secondary Clinical & Diagnostic
-    "MS Ophthalmology": 1.65,
-    "MS ENT": 1.75,
-    "MD Psychiatry": 1.90,
-    "MD Anaesthesiology": 2.20,
-    "MD Emergency Medicine": 2.00,
-    "MD Radiation Oncology": 2.40,
+    "MD Psychiatry": 4.87,
+    "MD Anaesthesiology": 5.26,
+    "MD Emergency Medicine": 5.79,
+    "MD Radiation Oncology": 6.58,
     # Para-Clinical
-    "MD Pathology": 3.80,
-    "MD Microbiology": 5.20,
-    "MD Pharmacology": 6.00,
-    "MD Forensic Medicine": 6.50,
-    "MD Community Medicine": 5.80,
+    "MD Pathology": 9.20,
+    "MD Microbiology": 14.46,
+    "MD Community Medicine": 15.78,
+    "MD Pharmacology": 17.09,
+    "MD Forensic Medicine": 18.41,
     # Pre-Clinical
-    "MD Physiology": 8.50,
-    "MD Biochemistry": 9.00,
-    "MD Anatomy": 10.50
+    "MD Physiology": 22.35,
+    "MD Biochemistry": 23.67,
+    "MD Anatomy": 26.30
 }
 
 

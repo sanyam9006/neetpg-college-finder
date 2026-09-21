@@ -55,7 +55,32 @@ class DatasetLoader:
             raise FileNotFoundError(f"College cutoffs not found at {self.college_file}")
 
         with open(self.college_file, "r", encoding="utf-8") as f:
-            return json.load(f)
+            raw = json.load(f)
+
+        normalized = []
+        for c in raw:
+            if "name" in c and "cutoffs" in c:
+                normalized.append(c)
+            else:
+                normalized.append({
+                    "name": c.get("n", c.get("name")),
+                    "state": c.get("s", c.get("state")),
+                    "type": c.get("t", c.get("type")),
+                    "tier": c.get("tier", 1),
+                    "seats": c.get("seats", 100),
+                    "specialties": c.get("sp", c.get("specialties", [])),
+                    "cutoffs": {
+                        "UR": c.get("UR", c.get("cutoffs", {}).get("UR", 50000)),
+                        "OBC": c.get("OBC", c.get("cutoffs", {}).get("OBC", 50000)),
+                        "SC": c.get("SC", c.get("cutoffs", {}).get("SC", 50000)),
+                        "ST": c.get("ST", c.get("cutoffs", {}).get("ST", 50000)),
+                        "EWS": c.get("EWS", c.get("cutoffs", {}).get("EWS", 50000)),
+                        "PH": c.get("PH", c.get("cutoffs", {}).get("PH", 50000)),
+                    },
+                    "is_new_2025": c.get("new", c.get("is_new_2025", False)),
+                    "is_ini_cet": c.get("t", c.get("type")) == "INI-CET"
+                })
+        return normalized
 
     def generate_synthetic_samples(
         self, pattern_data: ExamPatternData, n_samples: int = 2000, noise_std: float = 0.03

@@ -894,14 +894,17 @@
 <script>
 // Cloud Backend URL resolution (Render Production Backend)
 const RENDER_BACKEND_URL = "https://neetpg-college-finder.onrender.com";
+const isFileProto = window.location.protocol === "file:";
+const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 const urlBackendParam = new URLSearchParams(window.location.search).get('backend');
 if (urlBackendParam) {
   localStorage.setItem('neetpg_api_base', urlBackendParam.replace(/\/+$/, ''));
 }
 const savedBase = localStorage.getItem('neetpg_api_base');
+// On Vercel or Render, use relative "" so requests hit same-origin /api rewrites without CORS issues
 const API_BASE = window.NEETPG_API_URL 
   || (savedBase && savedBase.startsWith("http") ? savedBase : "") 
-  || ((window.location.protocol === "file:") ? "http://localhost:8000" : RENDER_BACKEND_URL);
+  || (isFileProto ? RENDER_BACKEND_URL : (isLocalhost ? "http://localhost:8000" : ""));
 
 
 /*
@@ -955,7 +958,7 @@ function updateAuthUI() {
       </div>`;
   } else {
     widget.innerHTML = `
-      <button class="auth-btn-hdr" onclick="openAuthModal('login')">
+      <button class="auth-btn-hdr" onclick="openAuthModal('register')">
         🔑 Sign In / Register
       </button>`;
   }
@@ -974,7 +977,9 @@ function openAuthModal(tab = 'register', message = null) {
     if (message) {
       noticeEl.textContent = message;
     } else {
-      noticeEl.textContent = 'Create your free candidate account to unlock All India Rank prediction and eligible college recommendations.';
+      noticeEl.textContent = tab === 'register'
+        ? 'Create your free candidate account to unlock All India Rank prediction and eligible college recommendations.'
+        : 'Sign in with your registered email or phone to access your account.';
     }
   }
 }
@@ -992,6 +997,12 @@ function switchAuthTab(tab) {
   document.getElementById('loginForm').style.display = !isReg ? 'block' : 'none';
   const alertEl = document.getElementById('authAlert');
   alertEl.style.display = 'none';
+  const noticeEl = document.getElementById('authNoticeText');
+  if (noticeEl) {
+    noticeEl.textContent = isReg 
+      ? 'New Candidate? Fill in your details below to register and save your record.' 
+      : 'Already registered? Enter your email/mobile and password to sign in.';
+  }
 }
 
 function showAuthAlert(msg, type = 'err') {
@@ -1035,7 +1046,7 @@ async function handleRegister(e) {
     currentUser = data.user;
     localStorage.setItem('neetpg_user', JSON.stringify(currentUser));
     updateAuthUI();
-    showAuthAlert('Registration successful! Unlocking predictions...', 'succ');
+    showAuthAlert('🎉 Registration successful! Account saved to cloud database.', 'succ');
     
     setTimeout(() => {
       closeAuthModal();
@@ -1045,31 +1056,12 @@ async function handleRegister(e) {
         pendingSearchTrigger = false;
         runSearch();
       }
-    }, 500);
+    }, 600);
   } catch(err) {
-    console.warn('Backend registration error or offline, fallback to local storage:', err);
-    // Offline fallback ensuring candidate is never blocked
-    currentUser = {
-      id: Date.now(),
-      name: name,
-      email: email,
-      phone: phone,
-      batch_year: batch_year,
-      token: 'offline_' + Math.random().toString(36).substr(2)
-    };
-    localStorage.setItem('neetpg_user', JSON.stringify(currentUser));
-    updateAuthUI();
-    showAuthAlert('Account created successfully! Unlocking predictions...', 'succ');
-
-    setTimeout(() => {
-      closeAuthModal();
-      btn.disabled = false;
-      btn.innerHTML = originalText;
-      if (pendingSearchTrigger) {
-        pendingSearchTrigger = false;
-        runSearch();
-      }
-    }, 500);
+    console.error('Registration error:', err);
+    showAuthAlert('❌ ' + (err.message || 'Registration failed. Please check connection and try again.'), 'err');
+    btn.disabled = false;
+    btn.innerHTML = originalText;
   }
 }
 
@@ -1097,7 +1089,7 @@ async function handleLogin(e) {
 
     const data = await res.json();
     if (!res.ok) {
-      throw new Error(data.detail || 'Invalid email/phone or password.');
+      throw new Error(data.detail || 'Candidate not found or invalid password.');
     }
 
     currentUser = data.user;
@@ -1115,7 +1107,7 @@ async function handleLogin(e) {
       }
     }, 500);
   } catch(err) {
-    showAuthAlert(err.message || 'Login failed. Please check your credentials.', 'err');
+    showAuthAlert('❌ ' + (err.message || 'Login failed.') + ' If you have not registered yet, click "Register Candidate" above.', 'err');
     btn.disabled = false;
     btn.innerHTML = originalText;
   }

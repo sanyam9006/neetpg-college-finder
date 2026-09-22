@@ -19,19 +19,102 @@ from fastapi.responses import StreamingResponse
 
 ADMIN_KEY = os.environ.get("ADMIN_KEY", "neetpg_admin_2024")
 DB_PATH = os.environ.get("DB_PATH", os.path.join("data", "users.db"))
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+
+class UnifiedCursor:
+    def __init__(self, raw_cursor, is_postgres: bool):
+        self._cursor = raw_cursor
+        self.is_postgres = is_postgres
+        self.lastrowid = None
+
+    def execute(self, sql: str, params: tuple = ()):
+        if self.is_postgres:
+            pg_sql = sql.replace("?", "%s")
+            self._cursor.execute(pg_sql, params)
+        else:
+            self._cursor.execute(sql, params)
+            self.lastrowid = self._cursor.lastrowid
+        return self
+
+    def fetchone(self):
+        row = self._cursor.fetchone()
+        if row is None:
+            return None
+        return dict(row)
+
+    def fetchall(self):
+        rows = self._cursor.fetchall()
+        return [dict(r) for r in rows]
+
+
+class UnifiedConnection:
+    def __init__(self, raw_conn, is_postgres: bool):
+        self._conn = raw_conn
+        self.is_postgres = is_postgres
+
+    def cursor(self):
+        return UnifiedCursor(self._conn.cursor(), self.is_postgres)
+
+    def commit(self):
+        self._conn.commit()
+
+    def close(self):
+        self._conn.close()
 
 
 def get_db():
+    if DATABASE_URL:
+        try:
+            import psycopg2
+            from psycopg2.extras import RealDictCursor
+            conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+            unified = UnifiedConnection(conn, is_postgres=True)
+            try:
+                yield unified
+            finally:
+                unified.close()
+            return
+        except Exception as e:
+            print(f"Warning: PostgreSQL connection error: {e}. Falling back to SQLite.")
+
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
+    unified = UnifiedConnection(conn, is_postgres=False)
     try:
-        yield conn
+        yield unified
     finally:
-        conn.close()
+        unified.close()
 
 
 def init_db():
+    if DATABASE_URL:
+        try:
+            import psycopg2
+            with psycopg2.connect(DATABASE_URL) as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS users (
+                            id SERIAL PRIMARY KEY,
+                            name TEXT NOT NULL,
+                            email TEXT UNIQUE NOT NULL,
+                            phone TEXT UNIQUE NOT NULL,
+                            batch_year TEXT NOT NULL,
+                            password_hash TEXT NOT NULL,
+                            salt TEXT NOT NULL,
+                            token TEXT UNIQUE,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        );
+                    """)
+                conn.commit()
+            print("Connected to PostgreSQL and verified users table schema.")
+            return
+        except Exception as e:
+            print(f"PostgreSQL initialization failed ({e}), falling back to SQLite.")
+
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
@@ -46,7 +129,7 @@ def init_db():
                 salt TEXT NOT NULL,
                 token TEXT UNIQUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
+            );
         """)
         conn.commit()
 
@@ -106,7 +189,7 @@ class AuthResponse(BaseModel):
 
 
 @router.post("/register", response_model=AuthResponse)
-def register(req: UserRegisterRequest, db: sqlite3.Connection = Depends(get_db)):
+def register(req: UserRegisterRequest, db = Depends(get_db)):
     email_clean = req.email.strip().lower()
     phone_clean = req.phone.strip().replace(" ", "").replace("-", "")
 
@@ -127,9 +210,11 @@ def register(req: UserRegisterRequest, db: sqlite3.Connection = Depends(get_db))
     cursor.execute("""
         INSERT INTO users (name, email, phone, batch_year, password_hash, salt, token, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        RETURNING id
     """, (req.name.strip(), email_clean, phone_clean, req.batch_year.strip(), pw_hash, salt, token, created_at))
+    row = cursor.fetchone()
     db.commit()
-    user_id = cursor.lastrowid
+    user_id = row["id"] if (row and "id" in row) else (cursor.lastrowid or 1)
 
     user_profile = UserProfileResponse(
         id=user_id,
@@ -149,7 +234,7 @@ def register(req: UserRegisterRequest, db: sqlite3.Connection = Depends(get_db))
 
 
 @router.post("/login", response_model=AuthResponse)
-def login(req: UserLoginRequest, db: sqlite3.Connection = Depends(get_db)):
+def login(req: UserLoginRequest, db = Depends(get_db)):
     ident = req.email_or_phone.strip().lower()
     phone_ident = req.email_or_phone.strip().replace(" ", "").replace("-", "")
 
@@ -194,7 +279,7 @@ def login(req: UserLoginRequest, db: sqlite3.Connection = Depends(get_db)):
 
 
 @router.get("/me", response_model=UserProfileResponse)
-def get_current_user(authorization: Optional[str] = Header(None), db: sqlite3.Connection = Depends(get_db)):
+def get_current_user(authorization: Optional[str] = Header(None), db = Depends(get_db)):
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization header missing.")
 
@@ -235,7 +320,7 @@ def verify_admin(credentials: Optional[HTTPAuthorizationCredentials] = Depends(a
 @router.get("/users")
 def get_all_registered_users(
     _: bool = Depends(verify_admin),
-    db: sqlite3.Connection = Depends(get_db)
+    db = Depends(get_db)
 ):
     cursor = db.cursor()
     cursor.execute("""
@@ -261,7 +346,7 @@ def get_all_registered_users(
 @router.get("/users/export")
 def export_registered_users_csv(
     _: bool = Depends(verify_admin),
-    db: sqlite3.Connection = Depends(get_db)
+    db = Depends(get_db)
 ):
     cursor = db.cursor()
     cursor.execute("""

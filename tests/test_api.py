@@ -90,3 +90,29 @@ def test_feedback_input_validation(client):
     }
     res = client.post("/api/v1/feedback", json=bad_payload)
     assert res.status_code == 422  # Unprocessable Entity validation error
+
+
+def test_strict_category_validation(client):
+    # Invalid category outside supported enums
+    bad_cat = {"score": 500, "pattern": 800, "category": "INVALID_CAT"}
+    res = client.post("/api/v1/predict", json=bad_cat)
+    assert res.status_code == 422
+
+
+def test_strict_score_pattern_bound_validation(client):
+    # Score 750 exceeds max marks for pattern 720
+    bad_score = {"score": 750, "pattern": 720, "category": "UR"}
+    res = client.post("/api/v1/predict", json=bad_score)
+    assert res.status_code == 422
+
+    # Negative score
+    neg_score = {"score": -10, "pattern": 800, "category": "UR"}
+    res2 = client.post("/api/v1/predict", json=neg_score)
+    assert res2.status_code == 422
+
+
+def test_health_alias_endpoint(client):
+    res = client.get("/health")
+    assert res.status_code == 200
+    assert res.json()["status"] == "healthy"
+

@@ -5,6 +5,7 @@ import secrets
 from datetime import datetime, timezone
 from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field, field_validator
 import re
 
@@ -216,23 +217,26 @@ def get_current_user(authorization: Optional[str] = Header(None), db: sqlite3.Co
     )
 
 
-def verify_admin(admin_key: Optional[str] = None, x_admin_key: Optional[str] = Header(None), authorization: Optional[str] = Header(None)):
-    token = admin_key or x_admin_key
-    if not token and authorization:
-        token = authorization.replace("Bearer ", "").strip()
-    if not token or token != ADMIN_KEY:
-        raise HTTPException(status_code=403, detail="Unauthorized: Invalid Admin Key.")
+admin_bearer = HTTPBearer(auto_error=False)
+
+
+def verify_admin(credentials: Optional[HTTPAuthorizationCredentials] = Depends(admin_bearer)):
+    if not credentials or credentials.scheme.lower() != "bearer":
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized: Missing or invalid Authorization Bearer header.",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    if credentials.credentials != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Forbidden: Invalid Admin Key.")
     return True
 
 
 @router.get("/users")
 def get_all_registered_users(
-    admin_key: Optional[str] = None,
-    x_admin_key: Optional[str] = Header(None),
-    authorization: Optional[str] = Header(None),
+    _: bool = Depends(verify_admin),
     db: sqlite3.Connection = Depends(get_db)
 ):
-    verify_admin(admin_key, x_admin_key, authorization)
     cursor = db.cursor()
     cursor.execute("""
         SELECT id, name, email, phone, batch_year, created_at
@@ -256,12 +260,9 @@ def get_all_registered_users(
 
 @router.get("/users/export")
 def export_registered_users_csv(
-    admin_key: Optional[str] = None,
-    x_admin_key: Optional[str] = Header(None),
-    authorization: Optional[str] = Header(None),
+    _: bool = Depends(verify_admin),
     db: sqlite3.Connection = Depends(get_db)
 ):
-    verify_admin(admin_key, x_admin_key, authorization)
     cursor = db.cursor()
     cursor.execute("""
         SELECT id, name, email, phone, batch_year, created_at

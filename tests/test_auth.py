@@ -64,12 +64,20 @@ def test_register_and_login_flow():
     assert me_resp.status_code == 200
     assert me_resp.json()["email"] == email
 
-    # 7. Admin unauthorized access should fail
-    unauth_resp = client.get("/api/v1/auth/users?admin_key=wrong_key")
-    assert unauth_resp.status_code == 403
+    # 7. Admin unauthorized access without header should fail with 401
+    no_auth_resp = client.get("/api/v1/auth/users")
+    assert no_auth_resp.status_code == 401
 
-    # 8. Admin authorized list candidates
-    admin_resp = client.get("/api/v1/auth/users?admin_key=neetpg_admin_2024")
+    # Query param alone is no longer accepted (prevents token leakage in logs)
+    query_auth_resp = client.get("/api/v1/auth/users?admin_key=neetpg_admin_2024")
+    assert query_auth_resp.status_code == 401
+
+    # Invalid Bearer token should fail with 403
+    bad_admin_resp = client.get("/api/v1/auth/users", headers={"Authorization": "Bearer wrong_key"})
+    assert bad_admin_resp.status_code == 403
+
+    # 8. Admin authorized list candidates using Authorization: Bearer
+    admin_resp = client.get("/api/v1/auth/users", headers={"Authorization": "Bearer neetpg_admin_2024"})
     assert admin_resp.status_code == 200
     admin_data = admin_resp.json()
     assert admin_data["status"] == "success"
@@ -77,8 +85,8 @@ def test_register_and_login_flow():
     found = any(u["email"] == email for u in admin_data["users"])
     assert found, "Newly registered user must be in admin candidate list"
 
-    # 9. Admin CSV export
-    csv_resp = client.get("/api/v1/auth/users/export?admin_key=neetpg_admin_2024")
+    # 9. Admin CSV export using Authorization: Bearer
+    csv_resp = client.get("/api/v1/auth/users/export", headers={"Authorization": "Bearer neetpg_admin_2024"})
     assert csv_resp.status_code == 200
     assert "text/csv" in csv_resp.headers["content-type"]
     assert "Full Name,Email Address,Phone Number" in csv_resp.text

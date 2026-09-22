@@ -1,0 +1,98 @@
+{
+  "qualifying_percentiles": {
+    "UR": 50.0,
+    "EWS": 50.0,
+    "OBC": 40.0,
+    "SC": 40.0,
+    "ST": 40.0,
+    "PH": 45.0
+  },
+  "uncertainty_envelope": {
+    "p10_factor": 0.88,
+    "p90_factor": 1.12
+  },
+  "tiers": [
+    {
+      "max_rank": 1000,
+      "tier_outlook": "Tier 1 – AIIMS & Premier Central Institutes",
+      "scope_summary": "Unrestricted access to high-demand clinical specialties across top GMCs",
+      "accessible_branches": [
+        "MD Radio-diagnosis",
+        "MD Dermatology",
+        "MD General Medicine",
+        "MD Pediatrics",
+        "MS General Surgery"
+      ]
+    },
+    {
+      "max_rank": 5000,
+      "tier_outlook": "Tier 1 & Premier State GMCs",
+      "scope_summary": "High admission probability for core clinical branches",
+      "accessible_branches": [
+        "MD General Medicine",
+        "MD Pediatrics",
+        "MS Orthopedics",
+        "MS General Surgery",
+        "MS Obs & Gynae"
+      ]
+    },
+    {
+      "max_rank": 15000,
+      "tier_outlook": "Tier 1 & Tier 2 State GMCs",
+      "scope_summary": "Strong probability across State GMCs and top Deemed universities",
+      "accessible_branches": [
+        "MD General Medicine",
+        "MD Pediatrics",
+        "MS General Surgery",
+        "MS Orthopedics",
+        "MD Anaesthesia",
+        "MD Pathology"
+      ]
+    },
+    {
+      "max_rank": 30000,
+      "tier_outlook": "Tier 2 GMCs & Premier Deemed/Private",
+      "scope_summary": "Solid surgical, diagnostic, and Deemed clinical options",
+      "accessible_branches": [
+        "MS ENT",
+        "MS Ophthalmology",
+        "MD Anaesthesia",
+        "MD Psychiatry",
+        "MD Pathology",
+        "MD Respiratory Medicine"
+      ]
+    },
+    {
+      "max_rank": 60000,
+      "tier_outlook": "Deemed Clinical & Government Para-clinical",
+      "scope_summary": "Clinical seats in reputed Deemed universities and Government diagnostic seats",
+      "accessible_branches": [
+        "Deemed Clinical MD/MS",
+        "MD Pathology",
+        "MD Anaesthesia",
+        "MS ENT",
+        "MD Pharmacology"
+      ]
+    },
+    {
+      "max_rank": null,
+      "tier_outlook": "Private & Deemed Universities",
+      "scope_summary": "Management quota clinical seats and Government pre-clinical specialties",
+      "accessible_branches": [
+        "Deemed MD/MS",
+        "Management Quota",
+        "MD Pathology",
+        "MD Pharmacology",
+        "MD Community Medicine"
+      ]
+    }
+  ],
+  "disqualified_tier": {
+    "tier_outlook": "Below Qualifying Cutoff",
+    "scope_summary_template": "Score is below the required {category} cutoff (~{cutoff_marks} marks)",
+    "accessible_branches": [
+      "Mop-up Round Re-evaluation",
+      "Private Pre-clinical"
+    ]
+  }
+}

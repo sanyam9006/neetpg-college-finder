@@ -204,7 +204,12 @@ def serve_admin():
 <div class="toast" id="toast"></div>
 
 <script>
-let adminKey = new URLSearchParams(window.location.search).get('admin_key') || sessionStorage.getItem('neetpg_admin_key') || '';
+const urlParamKey = new URLSearchParams(window.location.search).get('admin_key');
+if (urlParamKey) {
+  sessionStorage.setItem('neetpg_admin_key', urlParamKey.trim());
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+let adminKey = sessionStorage.getItem('neetpg_admin_key') || '';
 let allCandidates = [];
 
 function showToast(msg) {
@@ -228,8 +233,12 @@ async function loadCandidates() {
     return;
   }
   try {
-    const res = await fetch(`/api/v1/auth/users?admin_key=${encodeURIComponent(adminKey)}`);
-    if (res.status === 403) {
+    const res = await fetch('/api/v1/auth/users', {
+      headers: {
+        'Authorization': `Bearer ${adminKey}`
+      }
+    });
+    if (res.status === 401 || res.status === 403) {
       sessionStorage.removeItem('neetpg_admin_key');
       adminKey = '';
       document.getElementById('authOverlay').style.display = 'flex';
@@ -275,9 +284,31 @@ function filterTable() {
   renderTable(filtered);
 }
 
-function downloadCSV() {
+async function downloadCSV() {
   if (!adminKey) { document.getElementById('authOverlay').style.display = 'flex'; return; }
-  window.open(`/api/v1/auth/users/export?admin_key=${encodeURIComponent(adminKey)}`, '_blank');
+  try {
+    showToast('⏳ Generating CSV export...');
+    const res = await fetch('/api/v1/auth/users/export', {
+      headers: {
+        'Authorization': `Bearer ${adminKey}`
+      }
+    });
+    if (!res.ok) {
+      throw new Error('Export unauthorized or failed.');
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `neetpg_candidates_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    showToast('✅ CSV Export downloaded successfully!');
+  } catch(err) {
+    showToast('❌ ' + err.message);
+  }
 }
 
 function copyAllPhones() {
@@ -303,9 +334,8 @@ window.addEventListener('DOMContentLoaded', loadCandidates);
 
 
 
-# In-memory IP rate limiter for feedback submissions to prevent spam/poisoning
-# Note: Suitable for single-worker or local dev. Multi-worker/multi-pod production would use Redis.
-feedback_rate_limits = {}
+from src.api.rate_limiter import get_rate_limiter
+
 
 def get_client_ip(request: Request) -> str:
     forwarded = request.headers.get("x-forwarded-for")
@@ -313,15 +343,10 @@ def get_client_ip(request: Request) -> str:
         return forwarded.split(",")[0].strip()
     return request.client.host if request.client else "127.0.0.1"
 
+
 def check_feedback_rate_limit(client_ip: str, limit: int = 10, window_seconds: int = 60) -> bool:
-    now = time.time()
-    timestamps = feedback_rate_limits.get(client_ip, [])
-    timestamps = [t for t in timestamps if now - t < window_seconds]
-    if len(timestamps) >= limit:
-        return False
-    timestamps.append(now)
-    feedback_rate_limits[client_ip] = timestamps
-    return True
+    limiter = get_rate_limiter()
+    return limiter.is_allowed(f"feedback:{client_ip}", limit=limit, window_seconds=window_seconds)
 
 
 
@@ -347,11 +372,14 @@ def get_metrics():
 
 @app.post("/api/v1/predict", response_model=PredictResponse)
 def predict_rank(req: PredictRequest):
-    if req.pattern not in models:
-        raise HTTPException(status_code=400, detail=f"Unsupported pattern {req.pattern}. Valid patterns: 800, 720")
+    pat_val = int(req.pattern)
+    cat_val = str(req.category.value if hasattr(req.category, 'value') else req.category)
 
-    model = models[req.pattern]
-    pred = model.predict_single(score=req.score, category=req.category)
+    if pat_val not in models:
+        raise HTTPException(status_code=400, detail=f"Unsupported pattern {pat_val}. Valid patterns: 800, 720")
+
+    model = models[pat_val]
+    pred = model.predict_single(score=req.score, category=cat_val)
 
     # Record metrics & drift
     INPUT_SCORES_HISTOGRAM.observe(req.score)
@@ -381,9 +409,10 @@ def recommend_colleges(req: RecommendFilterRequest):
     if not recommender:
         raise HTTPException(status_code=503, detail="Recommender service not ready")
 
+    cat_val = str(req.category.value if hasattr(req.category, 'value') else req.category)
     engine_req = RecommendationRequest(
         rank=req.rank,
-        category=req.category,
+        category=cat_val,
         state=req.state if req.state else None,
         college_type=req.college_type if req.college_type else None,
         specialty=req.specialty if req.specialty else None,
@@ -417,19 +446,22 @@ def recommend_colleges(req: RecommendFilterRequest):
     return RecommendResponse(
         total_found=len(items),
         rank_evaluated=req.rank,
-        category=req.category,
+        category=cat_val,
         colleges=items
     )
 
 
 @app.post("/api/v1/predict-and-recommend", response_model=UnifiedResponse)
 def unified_predict_and_recommend(req: UnifiedPredictAndRecommendRequest):
-    # Step 1: Predict
-    if req.pattern not in models:
-        raise HTTPException(status_code=400, detail=f"Unsupported pattern {req.pattern}")
+    pat_val = int(req.pattern)
+    cat_val = str(req.category.value if hasattr(req.category, 'value') else req.category)
 
-    model = models[req.pattern]
-    pred = model.predict_single(score=req.score, category=req.category)
+    # Step 1: Predict
+    if pat_val not in models:
+        raise HTTPException(status_code=400, detail=f"Unsupported pattern {pat_val}")
+
+    model = models[pat_val]
+    pred = model.predict_single(score=req.score, category=cat_val)
 
     # Record metrics & drift
     INPUT_SCORES_HISTOGRAM.observe(req.score)
@@ -456,7 +488,7 @@ def unified_predict_and_recommend(req: UnifiedPredictAndRecommendRequest):
     # Step 2: Recommend
     engine_req = RecommendationRequest(
         rank=pred.predicted_rank,
-        category=req.category,
+        category=cat_val,
         state=req.state if req.state else None,
         college_type=req.college_type if req.college_type else None,
         specialty=req.specialty if req.specialty else None,
@@ -514,8 +546,8 @@ def submit_feedback(req: FeedbackRequest, request: Request):
     record = {
         "timestamp": time.time(),
         "score": req.score,
-        "pattern": req.pattern,
-        "category": req.category,
+        "pattern": int(req.pattern),
+        "category": str(req.category.value if hasattr(req.category, 'value') else req.category),
         "predicted_rank": req.predicted_rank,
         "actual_rank": req.actual_rank,
         "error_ranks": err,
